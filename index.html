@@ -1,44 +1,87 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tera Smoking Roast — Smotect</title>
-    <style>
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: #0a0a0a;
-        color: #fff;
-        min-height: 100vh;
-        padding: 20px 16px 60px;
-      }
+  try {
+    // Try server API first (may fail in browser due to CORS or missing API key)
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
 
-      .wrap {
-        max-width: 520px;
-        margin: 0 auto;
-      }
+    if (!response.ok) throw new Error('API response not OK');
 
-      .hero {
-        text-align: center;
-        padding: 40px 0 32px;
-      }
-      .hero .fire {
-        font-size: 48px;
-        margin-bottom: 16px;
-      }
-      .hero h1 {
-        font-size: clamp(24px, 6vw, 36px);
-        font-weight: 900;
-        line-height: 1.1;
-        margin-bottom: 10px;
-      }
-      .hero h1 span {
+    const data = await response.json();
+    const raw = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text.trim() : JSON.stringify(data);
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    roastResult = `${parsed.roast}\n\n${parsed.punchline}`;
+
+    document.getElementById('roast-type').textContent = parsed.type;
+    document.getElementById('roast-text').textContent = parsed.roast;
+    document.getElementById('roast-punchline').textContent = parsed.punchline;
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('result').style.display = 'block';
+
+  } catch (err) {
+    // Fallback: generate a local roast so the tool works without an API key/CORS
+    const parsed = localRoastGenerator(answers);
+    roastResult = `${parsed.roast}\n\n${parsed.punchline}`;
+
+    document.getElementById('roast-type').textContent = parsed.type;
+    document.getElementById('roast-text').textContent = parsed.roast;
+    document.getElementById('roast-punchline').textContent = parsed.punchline;
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('result').style.display = 'block';
+  }
         color: #ff4500;
+
+function localRoastGenerator(ans) {
+  // Simple deterministic local roast generator to be used as a fallback
+  const count = (ans[2] || '').toLowerCase();
+  const when = ans[1] || '';
+  const quit = ans[3] || '';
+  const attitude = ans[4] || '';
+
+  let type = 'Chai Cigarette Combo Pack';
+  if (count.includes('15') || count.includes('packet')) type = 'Packet Ka Raja';
+  else if (count.includes('8-14')) type = 'Chain Wala';
+  else if (count.includes('4-7')) type = 'Office Break Hero';
+  else if (count.includes('1-3')) type = 'Social Smoke';
+
+  const flavour = when ? `jab ${when} hota hai` : '';
+
+  // roast templates
+  const templates = [
+    `Yaar, ${flavour} cigarette peena dekhke lagta hai tu apne fayde ki nahi, drama ki parwah karta hai. Thoda swag thoda self-destruction — perfect combo. Agar "${quit}" sach hai toh tera next plan "kal se" wahi rahega.`,
+    `Aisa lagta hai tu ${flavour} cigarette ko apni identity bana baitha hai. Boss bhi soch raha hoga "promotion chahiye ya nicotine?". Ab punchline: bas thodi si sympathy aur zyada urgent maangti hai tera lung.`,
+    `Tu ${flavour} cigarette se zyada committed dikh raha hai apni laziness se. Roz "try" karta hai aur roz wapas aata hai — true dedication. Log teri maa se poochein ki "beta kitna serious hai?" to maa bol degi: "bahut" (seriously addicted).`
+  ];
+
+  // pick template based on severity
+  let roast = templates[0];
+  if (type === 'Packet Ka Raja') roast = `Bro, ${flavour} tu packet khatm karta hai aur zindagi ka warranty bhi. ${quit} bolke bhi har baar waapas aana, ye dedication hai ya surrender?`; 
+  else if (type === 'Chain Wala') roast = `Bhai, ${flavour} chain pe chain jodke tu smoke ka subscription renew kar raha hai. Office se chhutti chahiye ya doctor ki appointment?`; 
+  else if (type === 'Office Break Hero') roast = `Tu ${flavour} cigarette ko break samajh baitha hai — par asli break tumhari health le rahi hai. Boss tujhe promotion nahi dega, health dega "warning".`;
+  else roast = templates[Math.floor(Math.random()*templates.length)];
+
+  // keep it short (3-4 sentences max)
+  roast = roast.split('.').slice(0,3).join('.').trim();
+  if (!roast.endsWith('.')) roast += '.';
+
+  // punchline based on attitude
+  let punchline = '';
+  if (attitude.toLowerCase().includes('chhodni')) punchline = 'Agar sach mein chhodna hai toh aaj se chhod, warna lungs tera future refund nahi karenge.';
+  else if (attitude.toLowerCase().includes('mujhe kuch nahi')) punchline = 'Tera confidence accha hai — lekar chalna apne lungs ka insurance bhi toh seekh le.';
+  else if (attitude.toLowerCase().includes('stress')) punchline = 'Stress ka bhaari hisaab tera lung bhugta hai — therapy se behtar smoke quit karna.';
+  else punchline = 'Har cigarette tere future ko thoda aur chhota kar rahi hai — sach bol raha hoon.';
+
+  return { type, roast, punchline };
+}
       }
       .hero p {
         font-size: 15px;
