@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tera Smoking Roast — Smotect</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0a;color:#fff;min-height:100vh;padding:20px 16px 60px}
+
+.wrap{max-width:520px;margin:0 auto}
+
+.hero{text-align:center;padding:40px 0 32px}
+.hero .fire{font-size:48px;margin-bottom:16px}
+.hero h1{font-size:clamp(24px,6vw,36px);font-weight:900;line-height:1.1;margin-bottom:10px}
+.hero h1 span{color:#ff4500}
+.hero p{font-size:15px;color:#888;line-height:1.6}
+
+.card{background:#161616;border:1px solid #2a2a2a;border-radius:16px;padding:24px;margin-bottom:16px}
+
+.q-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#ff4500;margin-bottom:10px}
+.q-text{font-size:15px;font-weight:600;color:#fff;margin-bottom:14px;line-height:1.4}
+
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{background:#1f1f1f;border:1px solid #333;color:#ccc;font-size:13px;padding:8px 14px;border-radius:20px;cursor:pointer;transition:all .15s;font-family:inherit}
+.opt:hover{border-color:#ff4500;color:#fff}
+.opt.selected{background:#ff4500;border-color:#ff4500;color:#fff;font-weight:600}
+
+.btn-roast{width:100%;background:#ff4500;color:#fff;font-size:16px;font-weight:800;padding:16px;border:none;border-radius:12px;cursor:pointer;margin-top:8px;font-family:inherit;letter-spacing:.5px;transition:opacity .2s}
+.btn-roast:disabled{opacity:.5;cursor:not-allowed}
+.btn-roast:not(:disabled):hover{opacity:.9}
+
+.loading{text-align:center;padding:40px 20px;display:none}
+.loading .spinner{width:40px;height:40px;border:3px solid #2a2a2a;border-top-color:#ff4500;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{color:#888;font-size:14px}
+
+.result{display:none}
+.roast-card{background:linear-gradient(135deg,#1a0800,#2a0d00);border:2px solid #ff4500;border-radius:16px;padding:28px 24px;margin-bottom:20px;position:relative;overflow:hidden}
+.roast-card::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;background:#ff4500;opacity:.06;border-radius:50%}
+.roast-type{font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#ff4500;margin-bottom:14px}
+.roast-text{font-size:clamp(15px,3.5vw,18px);line-height:1.7;color:#fff;font-weight:500}
+.roast-punchline{margin-top:16px;padding-top:16px;border-top:1px solid #3a1a00;font-size:13px;color:#ff9060;font-style:italic;line-height:1.6}
+
+.smotect-nudge{background:#161616;border:1px solid #2a2a2a;border-radius:12px;padding:18px;margin-bottom:16px;display:flex;gap:14px;align-items:center}
+.nudge-icon{font-size:28px;flex-shrink:0}
+.nudge-text p:first-child{font-size:13px;font-weight:600;color:#fff;margin-bottom:4px}
+.nudge-text p:last-child{font-size:12px;color:#666;line-height:1.5}
+
+.btn-row{display:flex;gap:10px;margin-bottom:16px}
+.btn-share{flex:1;background:#25D366;color:#fff;font-size:14px;font-weight:700;padding:13px 10px;border:none;border-radius:10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-product{flex:1;background:#ff4500;color:#fff;font-size:14px;font-weight:700;padding:13px 10px;border:none;border-radius:10px;cursor:pointer;font-family:inherit}
+.btn-again{width:100%;background:transparent;color:#666;font-size:13px;padding:10px;border:1px solid #2a2a2a;border-radius:10px;cursor:pointer;font-family:inherit}
+.btn-again:hover{color:#fff;border-color:#444}
+
+.progress{display:flex;gap:6px;justify-content:center;margin-bottom:28px}
+.prog-dot{width:8px;height:8px;border-radius:50%;background:#2a2a2a;transition:background .2s}
+.prog-dot.done{background:#ff4500}
+
+.error{background:#2a0000;border:1px solid #ff4500;border-radius:10px;padding:14px;color:#ff8080;font-size:13px;text-align:center;display:none;margin-top:12px}
+
+.watermark{text-align:center;font-size:11px;color:#333;margin-top:20px}
+.watermark a{color:#ff4500;text-decoration:none}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="fire">🔥</div>
+    <h1>Tera Smoking<br><span>Roast</span> Ready Hai</h1>
+    <p>4 sawaal — ek brutal, accurate, funny roast.<br>Share karo yaar ko. Ya khud soch lo.</p>
+  </div>
+
+  <div class="progress">
+    <div class="prog-dot" id="d1"></div>
+    <div class="prog-dot" id="d2"></div>
+    <div class="prog-dot" id="d3"></div>
+    <div class="prog-dot" id="d4"></div>
+  </div>
+
+  <div id="questions">
+
+    <div class="card" id="q1">
+      <div class="q-label">Sawaal 1 / 4</div>
+      <div class="q-text">Tu cigarette kab sabse zyada pita hai?</div>
+      <div class="opts">
+        <button class="opt" data-q="1" data-v="chai ke saath subah">☕ Chai ke saath subah</button>
+        <button class="opt" data-q="1" data-v="khaane ke baad">🍽️ Khaane ke baad</button>
+        <button class="opt" data-q="1" data-v="stress mein office mein">😤 Stress mein office mein</button>
+        <button class="opt" data-q="1" data-v="raat ko akele">🌙 Raat ko akele</button>
+        <button class="opt" data-q="1" data-v="dosto ke saath">👥 Dosto ke saath</button>
+        <button class="opt" data-q="1" data-v="har waqt, koi bhi bahana">🔁 Har waqt, koi bhi bahana</button>
+      </div>
+    </div>
+
+    <div class="card" id="q2" style="display:none">
+      <div class="q-label">Sawaal 2 / 4</div>
+      <div class="q-text">Din mein kitni cigarette pita hai?</div>
+      <div class="opts">
+        <button class="opt" data-q="2" data-v="1-3 cigarette (social smoker ka natak)">1-3 🤥 "Main toh bas kabhi kabhi"</button>
+        <button class="opt" data-q="2" data-v="4-7 cigarette (moderate junkie)">4-7 😬 Full time junkie</button>
+        <button class="opt" data-q="2" data-v="8-14 cigarette (serious addiction)">8-14 😮 Serious addiction territory</button>
+        <button class="opt" data-q="2" data-v="15+ cigarette (ek packet ya zyada)">15+ 💀 Ek packet ya zyada</button>
+      </div>
+    </div>
+
+    <div class="card" id="q3" style="display:none">
+      <div class="q-label">Sawaal 3 / 4</div>
+      <div class="q-text">Tune quit karne ki koshish ki hai?</div>
+      <div class="opts">
+        <button class="opt" data-q="3" data-v="kabhi nahi socha">😎 Kabhi nahi socha</button>
+        <button class="opt" data-q="3" data-v="socha hai, kiya nahi">🤔 Socha hai, kiya nahi</button>
+        <button class="opt" data-q="3" data-v="try kiya, 3 din mein wapas">😅 Try kiya, 3 din mein wapas</button>
+        <button class="opt" data-q="3" data-v="multiple baar try kiya, ab tak nahi chhuta">💪 Multiple baar try kiya, ab tak nahi chhuta</button>
+      </div>
+    </div>
+
+    <div class="card" id="q4" style="display:none">
+      <div class="q-label">Sawaal 4 / 4</div>
+      <div class="q-text">Cigarette ke baare mein tera attitude kya hai?</div>
+      <div class="opts">
+        <button class="opt" data-q="4" data-v="yaar chhodni toh hai lekin abhi nahi">😶 Chhodni toh hai, abhi nahi</button>
+        <button class="opt" data-q="4" data-v="mujhe kuch nahi hoga, main strong hoon">💪 Mujhe kuch nahi hoga</button>
+        <button class="opt" data-q="4" data-v="pata hai bura hai lekin kya karein life mein stress hai">😩 Stress mein kya karein yaar</button>
+        <button class="opt" data-q="4" data-v="actually seriously chhodni hai mujhe">🙏 Actually seriously chhodni hai</button>
+      </div>
+    </div>
+
+    <button class="btn-roast" id="btn-roast" disabled onclick="generateRoast()">
+      🔥 Mera Roast Generate Karo
+    </button>
+    <div class="error" id="error-msg"></div>
+
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>AI tera roast likh raha hai...<br>Brace yourself 😈</p>
+  </div>
+
+  <div class="result" id="result">
+    <div class="roast-card" id="roast-card">
+      <div class="roast-type" id="roast-type"></div>
+      <div class="roast-text" id="roast-text"></div>
+      <div class="roast-punchline" id="roast-punchline"></div>
+    </div>
+
+    <div class="smotect-nudge">
+      <div class="nudge-icon">🌿</div>
+      <div class="nudge-text">
+        <p>Roast se serious ho gaye? Smotect Azaadi try karo.</p>
+        <p>21.56% complete cessation rate. Zero nicotine. Clinically proven.</p>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-share" onclick="shareWhatsApp()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Share Karo
+      </button>
+      <button class="btn-product" onclick="window.open('https://www.smotect.com/products/smotect-azaadi','_blank')">
+        Smotect Try Karo
+      </button>
+    </div>
+    <button class="btn-again" onclick="resetTool()">🔄 Dobaara Try Karo</button>
+  </div>
+
+  <div class="watermark">Powered by <a href="https://www.smotect.com">Smotect.com</a> — India's #1 Natural Quit Smoking Solution</div>
+
+</div>
+
+<script>
+const answers = {};
+let currentQ = 1;
+let roastResult = '';
+
+document.querySelectorAll('.opt').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const q = this.dataset.q;
+    const v = this.dataset.v;
+    document.querySelectorAll(`.opt[data-q="${q}"]`).forEach(b => b.classList.remove('selected'));
+    this.classList.add('selected');
+    answers[q] = v;
+    document.getElementById(`d${q}`).classList.add('done');
+
+    setTimeout(() => {
+      if (q < 4) {
+        document.getElementById(`q${q}`).style.display = 'none';
+        const next = parseInt(q) + 1;
+        document.getElementById(`q${next}`).style.display = 'block';
+        currentQ = next;
+      }
+      checkAllAnswered();
+    }, 300);
+  });
+});
+
+function checkAllAnswered() {
+  const allDone = answers[1] && answers[2] && answers[3] && answers[4];
+  document.getElementById('btn-roast').disabled = !allDone;
+}
+
+async function generateRoast() {
+  document.getElementById('questions').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('error-msg').style.display = 'none';
+
+  const prompt = `You are a savage but funny roast comedian who also genuinely cares about people's health. 
+
+A smoker answered these questions:
+- Kab sabse zyada pita hai: ${answers[1]}
+- Din mein kitna: ${answers[2]}  
+- Quit karne ki koshish: ${answers[3]}
+- Cigarette ke baare mein attitude: ${answers[4]}
+
+Write a BRUTAL, FUNNY, ACCURATE roast of this smoker in Hinglish (mix of Hindi and English). 
+
+Rules:
+- 3-4 sentences MAX for the roast
+- Be savage but not mean-spirited — like a best friend roasting you
+- Use their specific answers to make it feel personal and accurate
+- Add cultural Indian references (chai, office, maa, etc.) where fitting
+- End with ONE sharp punchline that stings but is also funny
+
+Then write a SHORT "punchline" (separate field) — one brutal honest line about what their smoking is actually doing to them, delivered with dark humor.
+
+Also give a "type" label — a funny 3-5 word name for their smoking personality type. Examples: "The Denial King", "Office Ke Bahar Hero", "Chai Cigarette Combo Pack"
+
+Respond in this exact JSON format only, no extra text:
+{
+  "type": "funny smoker type label",
+  "roast": "the main roast text in Hinglish",
+  "punchline": "one sharp honest punchline"
+}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    const raw = data.content[0].text.trim();
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    roastResult = `${parsed.roast}\n\n${parsed.punchline}`;
+
+    document.getElementById('roast-type').textContent = parsed.type;
+    document.getElementById('roast-text').textContent = parsed.roast;
+    document.getElementById('roast-punchline').textContent = parsed.punchline;
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('result').style.display = 'block';
+
+  } catch (err) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('questions').style.display = 'block';
+    const errEl = document.getElementById('error-msg');
+    errEl.style.display = 'block';
+    errEl.textContent = 'Kuch gadbad ho gayi. Dobara try karo! 🔄';
+  }
+}
+
+function shareWhatsApp() {
+  const type = document.getElementById('roast-type').textContent;
+  const roast = document.getElementById('roast-text').textContent;
+  const msg = `🔥 Mera Smoking Roast Result:\n\n*${type}*\n\n${roast}\n\n👆 Apna roast dekho: smotect.com/pages/smoking-roast`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function resetTool() {
+  Object.keys(answers).forEach(k => delete answers[k]);
+  document.querySelectorAll('.opt').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.prog-dot').forEach(d => d.classList.remove('done'));
+  for (let i = 2; i <= 4; i++) document.getElementById(`q${i}`).style.display = 'none';
+  document.getElementById('q1').style.display = 'block';
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('questions').style.display = 'block';
+  document.getElementById('btn-roast').disabled = true;
+  currentQ = 1;
+  roastResult = '';
+}
+</script>
+
+</body>
+</html>
